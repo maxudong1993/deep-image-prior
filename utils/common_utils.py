@@ -59,6 +59,33 @@ def get_image_grid(images_np, nrow=8):
     
     return torch_grid.numpy()
 
+def sensor_gain(us_img, mr_img, d = 32):
+    #d is the size of each region = d in crop_image
+    region_size = d ** 2 
+    us_np = np.array(us_img).reshape(1,-1) #lexicographically reshape
+    mr_np = np.array(mr_img).reshape(1,-1) 
+    us_result = np.array([])
+    mr_result = np.array([])
+    for i in range(int(us_np.shape[-1]/region_size)):
+        begin_pixel = i * region_size
+        end_pixel = begin_pixel + region_size
+        us_temp = us_np[:,begin_pixel:end_pixel]
+        mr_temp = mr_np[:,begin_pixel:end_pixel]
+        temp = np.concatenate((us_temp,mr_temp))
+        temp_convex = np.cov(temp) #covariance matrix
+#         temp_rank = np.linalg.matrix_rank(temp_convex)
+        # return eigenvalue (array) and normalized eigenvectors (length=1) ,column corresponding
+        eigenvalue, eigenvector = np.linalg.eig(temp_convex) 
+        principal_idx = abs(eigenvalue).argmax()
+        sensor_gain = eigenvector[:,principal_idx] #get the principal eigenvector
+        if np.unique(sensor_gain).size == 1: #if sensor gains for different images are the same set them as 1.
+            sensor_gain = np.ones(sensor_gain.size)
+
+        us_result = np.append(us_result, np.array([sensor_gain[0]]*region_size))
+        mr_result = np.append(mr_result, np.array([sensor_gain[1]]*region_size))
+    return us_result.reshape(us_img.shape), mr_result.reshape(mr_img.shape)    
+
+
 def plot_image_grid(images_np, nrow =8, factor=1, interpolation='lanczos'):
     """Draws images in a grid
     
@@ -91,8 +118,24 @@ def load(path):
     img = Image.open(path)
     return img
 
+def samesize_images(us_path, mr_path):
+    us_img = Image.open(us_path)
+    mr_img = Image.open(mr_path)
+    us_size = us_img.size
+    mr_size = mr_img.size
+    if us_size[0] == mr_size[0]:
+        return us_path, mr_path
+    elif us_size[0] > mr_size[0]: #magnify
+        mr_img = mr_img.resize(us_size,Image.BICUBIC)
+    else: #shrink
+        mr_img = mr_img.resize(us_size,Image.ANTIALIAS)
+    mr_img.save("data/denoising/mri_mod_samesize.png")
+    mr_path = "data/denoising/mri_mod_samesize.png"
+    return us_path, mr_path 
+
+
 def get_image(path, imsize=-1):
-    """Load an image and resize to a cpecific size. 
+    """Load an image and resize to a specific size. 
 
     Args: 
         path: path to image
@@ -105,9 +148,9 @@ def get_image(path, imsize=-1):
 
     if imsize[0]!= -1 and img.size != imsize:
         if imsize[0] > img.size[0]:
-            img = img.resize(imsize, Image.BICUBIC)
+            img = img.resize(imsize, Image.BICUBIC) #magnify
         else:
-            img = img.resize(imsize, Image.ANTIALIAS)
+            img = img.resize(imsize, Image.ANTIALIAS) #shrink
 
     img_np = pil_to_np(img)
 
@@ -155,16 +198,16 @@ def get_noise(input_depth, method, spatial_size, noise_type='u', var=1./10):
 def pil_to_np(img_PIL):
     '''Converts image in PIL format to np.array.
     
-    From W x H x C [0...255] to C x W x H [0..1]
+    From W x H x C [0...255] to C x W x H [0..1] xudong delete this
     '''
     ar = np.array(img_PIL)
 
     if len(ar.shape) == 3:
         ar = ar.transpose(2,0,1)
     else:
-        ar = ar[None, ...]
+        ar = ar[None, ...] #add a new axis
 
-    return ar.astype(np.float32) / 255.
+    return ar.astype(np.float32) #/ 255.
 
 def np_to_pil(img_np): 
     '''Converts image in np.array format to PIL image.

@@ -14,12 +14,12 @@ class Concat(nn.Module):
         self.dim = dim
 
         for idx, module in enumerate(args):
-            self.add_module(str(idx), module)
+            self.add_module(str(idx), module) #forward is the key point
 
     def forward(self, input):
         inputs = []
         for module in self._modules.values():
-            inputs.append(module(input))
+            inputs.append(module(input)) ###deeper are appended to skip
 
         inputs_shapes2 = [x.shape[2] for x in inputs]
         inputs_shapes3 = [x.shape[3] for x in inputs]        
