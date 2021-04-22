@@ -195,10 +195,11 @@ def get_noise(input_depth, method, spatial_size, noise_type='u', var=1./10):
         
     return net_input
 
+#xudong add a new axis and values divid 255
 def pil_to_np(img_PIL):
     '''Converts image in PIL format to np.array.
     
-    From W x H x C [0...255] to C x W x H [0..1] xudong delete this
+    From W x H x C [0...255] to C x W x H [0..1] 
     '''
     ar = np.array(img_PIL)
 
@@ -207,7 +208,7 @@ def pil_to_np(img_PIL):
     else:
         ar = ar[None, ...] #add a new axis
 
-    return ar.astype(np.float32) #/ 255.
+    return ar.astype(np.float32) / 255.
 
 def np_to_pil(img_np): 
     '''Converts image in np.array format to PIL image.
