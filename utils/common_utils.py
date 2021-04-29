@@ -77,13 +77,20 @@ def sensor_gain(us_img, mr_img, d = 32):
         # return eigenvalue (array) and normalized eigenvectors (length=1) ,column corresponding
         eigenvalue, eigenvector = np.linalg.eig(temp_convex) 
         principal_idx = abs(eigenvalue).argmax()
-        sensor_gain = eigenvector[:,principal_idx] #get the principal eigenvector
+        sensor_gain = abs(eigenvector[:,principal_idx]) #get the principal eigenvector (abs)
         if np.unique(sensor_gain).size == 1: #if sensor gains for different images are the same set them as 1.
             sensor_gain = np.ones(sensor_gain.size)
 
         us_result = np.append(us_result, np.array([sensor_gain[0]]*region_size))
         mr_result = np.append(mr_result, np.array([sensor_gain[1]]*region_size))
-    return us_result.reshape(us_img.shape), mr_result.reshape(mr_img.shape)    
+        
+    us_result = us_result.reshape(us_img.shape)
+    mr_result = mr_result.reshape(mr_img.shape)
+    norm = np.square(us_result) + np.square(mr_result)
+    us_result = us_result/np.sqrt(norm)
+    mr_result = mr_result/np.sqrt(norm)
+    
+    return us_result, mr_result    
 
 
 def plot_image_grid(images_np, nrow =8, factor=1, interpolation='lanczos'):
