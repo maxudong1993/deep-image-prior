@@ -90,7 +90,10 @@ def sensor_gain(us_img, mr_img, d = 32):
     us_result = us_result/np.sqrt(norm)
     mr_result = mr_result/np.sqrt(norm)
     
-    return us_result, mr_result    
+    return us_result, mr_result   
+
+def test():
+    print("LLLLLL")
 
 
 def plot_image_grid(images_np, nrow =8, factor=1, interpolation='lanczos'):
