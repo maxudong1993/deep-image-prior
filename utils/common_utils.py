@@ -9,6 +9,7 @@ import PIL
 import numpy as np
 
 import matplotlib.pyplot as plt
+from scipy.signal import medfilt2d
 
 def crop_image(img, d=32):
     '''Make dimensions divisible by `d`'''
@@ -58,6 +59,16 @@ def get_image_grid(images_np, nrow=8):
     torch_grid = torchvision.utils.make_grid(images_torch, nrow)
     
     return torch_grid.numpy()
+
+def estimatePSF(img, psf_size):
+    g = np.log(abs(np.fft.fft2(img))) #Fourier transform
+    delta_g = g - mediflt2d(g)  #singal filter
+    lamb = 0.05 * abs(delta_g)
+    r = np.sign(delta_g)*np.maximum(0,abs(delta_g)-lamb)
+    gr = g - r
+    c = pywt.wavedec2(gr,wavelet='bior3.5',level=4) #return a list of wavedec2
+
+
 
 def sensor_gain(us_img, mr_img, d = 32):
     #d is the size of each region = d in crop_image
