@@ -10,6 +10,7 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 from scipy.signal import medfilt2d
+from skimage.restoration import (denoise_wavelet, estimate_sigma)
 
 def crop_image(img, d=32):
     '''Make dimensions divisible by `d`'''
@@ -60,13 +61,58 @@ def get_image_grid(images_np, nrow=8):
     
     return torch_grid.numpy()
 
-def estimatePSF(img, psf_size):
-    g = np.log(abs(np.fft.fft2(img))) #Fourier transform
-    delta_g = g - mediflt2d(g)  #singal filter
-    lamb = 0.05 * abs(delta_g)
-    r = np.sign(delta_g)*np.maximum(0,abs(delta_g)-lamb)
-    gr = g - r
-    c = pywt.wavedec2(gr,wavelet='bior3.5',level=4) #return a list of wavedec2
+def estimatePSF(img, psf_size = None):
+    #img is 2D
+    G = np.log(abs(np.fft.fft2(img))) #Fourier transform
+    print(G.shape)
+    deltaG = G - medfilt2d(G)  
+    lambd = 0.05 * abs(deltaG) #Threshold
+    R = np.sign(deltaG)*np.maximum(0,abs(deltaG)-lambd)
+    GR = G - R
+    
+    #wavelet denosing
+    sigma_est = estimate_sigma(GR) 
+    im_visushrink = denoise_wavelet(GR, method = 'VisuShrink',mode = 'soft',
+                                    wavelet_levels = 4,sigma = sigma_est, rescale_sigma=True)
+    H = np.exp(im_visushrink)
+    psf = otf2psf(H, psf_size)
+    return H,psf
+    
+#xudong ma 19/05/2021
+#https://vimsky.com/examples/detail/python-method-torch.fft.html
+#https://github.com/aboucaud/pypher/blob/master/pypher/pypher.py 
+def otf2psf(otf, outsize=None):
+    insize = np.array(otf.shape)
+    psf = np.fft.ifftn(otf, axes=(0, 1))
+    for axis, axis_size in enumerate(insize):
+        psf = np.roll(psf, np.floor(axis_size / 2).astype(int), axis=axis)
+    if type(outsize) != type(None):
+        insize = np.array(otf.shape)
+        outsize = np.array(outsize)
+        n = max(np.size(outsize), np.size(insize))
+        # outsize = postpad(outsize(:), n, 1);
+        # insize = postpad(insize(:) , n, 1);
+        colvec_out = outsize.flatten().reshape((np.size(outsize), 1))
+        colvec_in = insize.flatten().reshape((np.size(insize), 1))
+        outsize = np.pad(colvec_out, ((0, max(0, n - np.size(colvec_out))), (0, 0)), mode="constant")
+        insize = np.pad(colvec_in, ((0, max(0, n - np.size(colvec_in))), (0, 0)), mode="constant")
+
+        pad = (insize - outsize) / 2
+        if np.any(pad < 0):
+            print("otf2psf error: OUTSIZE must be smaller than or equal than OTF size")
+        prepad = np.floor(pad)
+        postpad = np.ceil(pad)
+        dims_start = prepad.astype(int)
+        dims_end = (insize - postpad).astype(int)
+        for i in range(len(dims_start.shape)):
+            psf = np.take(psf, range(dims_start[i][0], dims_end[i][0]), axis=i)
+    n_ops = np.sum(otf.size * np.log2(otf.shape))
+    psf = np.real_if_close(psf, tol=n_ops)
+    return psf
+        
+        
+    
+
 
 
 
