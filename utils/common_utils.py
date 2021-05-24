@@ -270,14 +270,16 @@ def pil_to_np(img_PIL):
     else:
         ar = ar[None, ...] #add a new axis
 
-    return ar.astype(np.float32) / 255.
+#     return ar.astype(np.float32) / 255.
+    return ar.astype(np.double)
 
 def np_to_pil(img_np): 
     '''Converts image in np.array format to PIL image.
     
     From C x W x H [0..1] to  W x H x C [0...255]
     '''
-    ar = np.clip(img_np*255,0,255).astype(np.uint8)
+#     ar = np.clip(img_np*255,0,255).astype(np.uint8)
+    ar = img_np.astype(np.uint16)
     
     if img_np.shape[0] == 1:
         ar = ar[0]
