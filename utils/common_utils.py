@@ -138,7 +138,7 @@ def sensor_gain(us_img, mr_img, mbSize = 1):
             sensor_gain = abs(eigenvector[:,principal_idx]) #get the principal eigenvector (abs)
             local_us_beta = sensor_gain[0]
             local_mr_beta = sensor_gain[1]
-            if local_us_beta = local_mr_beta:
+            if local_us_beta == local_mr_beta:
                 local_us_beta = 1
                 local_mr_beta = 1
             us_beta[i:i+mbSize,j:j+mbSize] = local_us_beta * np.ones((mbSize+1,mbSize+1))
