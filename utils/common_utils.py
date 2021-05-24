@@ -119,8 +119,8 @@ def sensor_gain(us_img, mr_img, mbSize = 1):
     col = us_np.shape[1]
     us_beta = np.zeros(us_np.shape)
     mr_beta = np.zeros(mr_np.shape)
-    for i in range(1,row-mbSize,mbSize+1):
-        for j in range(1,col-mbSize,mbSize+1):
+    for i in range(0,row-mbSize-1,mbSize+1):
+        for j in range(0,col-mbSize-1,mbSize+1):
             R_us = us_np[i:i+mbSize,j:j+mbSize]
             R_mr = mr_np[i:i+mbSize,j:j+mbSize]
             
@@ -129,7 +129,7 @@ def sensor_gain(us_img, mr_img, mbSize = 1):
             
             vK = np.hstack((f_us,f_mr))
             variance = np.zeros((2,2))
-            for k in range(1,vK.shape[0]+1):
+            for k in range(0,vK.shape[0]):
                 temp_variance = vK[k][None].T
                 variance = variance+temp_variance.dot(temp_variance.T)
             # return eigenvalue (array) and normalized eigenvectors (length=1) ,column corresponding
@@ -141,13 +141,16 @@ def sensor_gain(us_img, mr_img, mbSize = 1):
             if local_us_beta == local_mr_beta:
                 local_us_beta = 1
                 local_mr_beta = 1
-            us_beta[i:i+mbSize,j:j+mbSize] = local_us_beta * np.ones((mbSize+1,mbSize+1))
-            mr_beta[i:i+mbSize,j:j+mbSize] = local_mr_beta * np.ones((mbSize+1,mbSize+1))
+            
+            us_beta[i:i+mbSize+1,j:j+mbSize+1] = local_us_beta * np.ones((mbSize+1,mbSize+1))
+            mr_beta[i:i+mbSize+1,j:j+mbSize+1] = local_mr_beta * np.ones((mbSize+1,mbSize+1))
                                                                      
 #     normalize
     norm = np.square(us_beta) + np.square(mr_beta)
     us_result = us_beta/np.sqrt(norm)
     mr_result = mr_beta/np.sqrt(norm) 
+    us_result[np.isnan(us_result)]=1
+    mr_result[np.isnan(mr_result)]=1
     return us_result, mr_result   
 
 def test():
