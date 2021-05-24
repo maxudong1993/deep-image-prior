@@ -112,17 +112,20 @@ def otf2psf(otf, outsize=None):
     
 
 def sensor_gain(us_img, mr_img, mbSize = 1):
-    #p is the width of steps
+    
+    #mbSize is the width of steps
+    #the size of the window should be (mbSize+1)*(mbSize+1)
     us_np = np.array(us_img)
     mr_np = np.array(mr_img)
     row = us_np.shape[0]
     col = us_np.shape[1]
     us_beta = np.zeros(us_np.shape)
     mr_beta = np.zeros(mr_np.shape)
-    for i in range(0,row-mbSize-1,mbSize+1):
-        for j in range(0,col-mbSize-1,mbSize+1):
-            R_us = us_np[i:i+mbSize,j:j+mbSize]
-            R_mr = mr_np[i:i+mbSize,j:j+mbSize]
+    #The end value is not right for any mbSize, however, it's right when mbSize=1
+    for i in range(0,row-mbSize,mbSize+1):
+        for j in range(0,col-mbSize,mbSize+1):
+            R_us = us_np[i:i+mbSize+1,j:j+mbSize+1]
+            R_mr = mr_np[i:i+mbSize+1,j:j+mbSize+1]
             
             f_us = R_us.reshape(-1,1,order='F') #reshape cloumn first
             f_mr = R_mr.reshape(-1,1,order='F')
