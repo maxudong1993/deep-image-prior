@@ -142,7 +142,7 @@ def sensor_gain(us_img, mr_img, mbSize = 1):
                 local_us_beta = 1
                 local_mr_beta = 1
             us_beta[i:i+mbSize,j:j+mbSize] = local_us_beta * np.ones((mbSize+1,mbSize+1))
-            mr_beta[i:i+mbSize,j:j+mbSize] = local_mr_beta * np.ones((mbSize+1,mbSize+1)
+            mr_beta[i:i+mbSize,j:j+mbSize] = local_mr_beta * np.ones((mbSize+1,mbSize+1))
                                                                      
 #     normalize
     norm = np.square(us_beta) + np.square(mr_beta)
