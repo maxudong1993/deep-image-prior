@@ -278,7 +278,7 @@ def np_to_pil(img_np):
     
     From C x W x H [0..1] to  W x H x C [0...255]
     '''
-    ar = img_np*255.astype(np.uint16)
+    ar = (img_np*255).astype(np.uint16)
 #     ar = img_np.astype(np.uint16)
     
     if img_np.shape[0] == 1:
