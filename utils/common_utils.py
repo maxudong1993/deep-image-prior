@@ -111,37 +111,43 @@ def otf2psf(otf, outsize=None):
     return psf
     
 
-def sensor_gain(us_img, mr_img, d = 32):
-    #d is the size of each region = d in crop_image
-    region_size = d ** 2 
-    us_np = np.array(us_img).reshape(1,-1) #lexicographically reshape
-    mr_np = np.array(mr_img).reshape(1,-1) 
-    us_result = np.array([])
-    mr_result = np.array([])
-    for i in range(int(us_np.shape[-1]/region_size)):
-        begin_pixel = i * region_size
-        end_pixel = begin_pixel + region_size
-        us_temp = us_np[:,begin_pixel:end_pixel]
-        mr_temp = mr_np[:,begin_pixel:end_pixel]
-        temp = np.concatenate((us_temp,mr_temp))
-        temp_convex = np.cov(temp) #covariance matrix
-#         temp_rank = np.linalg.matrix_rank(temp_convex)
-        # return eigenvalue (array) and normalized eigenvectors (length=1) ,column corresponding
-        eigenvalue, eigenvector = np.linalg.eig(temp_convex) 
-        principal_idx = abs(eigenvalue).argmax()
-        sensor_gain = abs(eigenvector[:,principal_idx]) #get the principal eigenvector (abs)
-        if np.unique(sensor_gain).size == 1: #if sensor gains for different images are the same set them as 1.
-            sensor_gain = np.ones(sensor_gain.size)
-
-        us_result = np.append(us_result, np.array([sensor_gain[0]]*region_size))
-        mr_result = np.append(mr_result, np.array([sensor_gain[1]]*region_size))
-        
-    us_result = us_result.reshape(us_img.shape)
-    mr_result = mr_result.reshape(mr_img.shape)
-    norm = np.square(us_result) + np.square(mr_result)
-    us_result = us_result/np.sqrt(norm)
-    mr_result = mr_result/np.sqrt(norm)
-    
+def sensor_gain(us_img, mr_img, mbSize = 1):
+    #p is the width of steps
+    us_np = np.array(us_img)
+    mr_np = np.array(mr_img)
+    row = us_np.shape[0]
+    col = us_np.shape[1]
+    us_beta = np.zeros(us_np.shape)
+    mr_beta = np.zeros(mr_np.shape)
+    for i in range(1,row-mbSize,mbSize+1):
+        for j in range(1,col-mbSize,mbSize+1):
+            R_us = us_np[i:i+mbSize,j:j+mbSize]
+            R_mr = mr_np[i:i+mbSize,j:j+mbSize]
+            
+            f_us = R_us.reshape(-1,1,order='F') #reshape cloumn first
+            f_mr = R_mr.reshape(-1,1,order='F')
+            
+            vK = np.hstack((f_us,f_mr))
+            variance = np.zeros((2,2))
+            for k in range(1,vK.shape[0]+1):
+                temp_variance = vK[k][None].T
+                variance = variance+temp_variance.dot(temp_variance.T)
+            # return eigenvalue (array) and normalized eigenvectors (length=1) ,column corresponding
+            eigenvalue, eigenvector = np.linalg.eig(variance)
+            principal_idx = abs(eigenvalue).argmax()
+            sensor_gain = abs(eigenvector[:,principal_idx]) #get the principal eigenvector (abs)
+            local_us_beta = sensor_gain[0]
+            local_mr_beta = sensor_gain[1]
+            if local_us_beta = local_mr_beta:
+                local_us_beta = 1
+                local_mr_beta = 1
+            us_beta[i:i+mbSize,j:j+mbSize] = local_us_beta * np.ones((mbSize+1,mbSize+1))
+            mr_beta[i:i+mbSize,j:j+mbSize] = local_mr_beta * np.ones((mbSize+1,mbSize+1)
+                                                                     
+#     normalize
+    norm = np.square(us_beta) + np.square(mr_beta)
+    us_result = us_beta/np.sqrt(norm)
+    mr_result = mr_beta/np.sqrt(norm) 
     return us_result, mr_result   
 
 def test():
