@@ -109,12 +109,7 @@ def otf2psf(otf, outsize=None):
     n_ops = np.sum(otf.size * np.log2(otf.shape))
     psf = np.real_if_close(psf, tol=n_ops)
     return psf
-        
-        
     
-
-
-
 
 def sensor_gain(us_img, mr_img, d = 32):
     #d is the size of each region = d in crop_image
@@ -135,8 +130,8 @@ def sensor_gain(us_img, mr_img, d = 32):
         eigenvalue, eigenvector = np.linalg.eig(temp_convex) 
         principal_idx = abs(eigenvalue).argmax()
         sensor_gain = abs(eigenvector[:,principal_idx]) #get the principal eigenvector (abs)
-        if np.unique(sensor_gain).size == 1: #if sensor gains for different images are the same set them as 1.
-            sensor_gain = np.ones(sensor_gain.size)
+#         if np.unique(sensor_gain).size == 1: #if sensor gains for different images are the same set them as 1.
+#             sensor_gain = np.ones(sensor_gain.size)
 
         us_result = np.append(us_result, np.array([sensor_gain[0]]*region_size))
         mr_result = np.append(mr_result, np.array([sensor_gain[1]]*region_size))
