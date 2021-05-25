@@ -75,7 +75,6 @@ def estimatePSF(img, psf_size = None):
     im_visushrink = denoise_wavelet(GR, method = 'VisuShrink',mode = 'soft',
                                     wavelet_levels = 4,sigma = sigma_est, rescale_sigma=True)
     H = np.exp(im_visushrink)
-    print(H.dtype)
     psf = otf2psf(H, psf_size)
     return H,psf
     
