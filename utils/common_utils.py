@@ -61,21 +61,23 @@ def get_image_grid(images_np, nrow=8):
     
     return torch_grid.numpy()
 
-def estimatePSF(img, psf_size = None):
+def estimatePSF(img, psf_size = [5,5]):
     #img is 2D
     G = np.log(abs(np.fft.fft2(img))) #Fourier transform
-    print(G.shape)
+#     print(G.shape)
     deltaG = G - medfilt2d(G)  
     lambd = 0.05 * abs(deltaG) #Threshold
     R = np.sign(deltaG)*np.maximum(0,abs(deltaG)-lambd)
     GR = G - R
     
     #wavelet denosing
-    sigma_est = estimate_sigma(GR) 
-    im_visushrink = denoise_wavelet(GR, method = 'VisuShrink',mode = 'soft',
-                                    wavelet_levels = 4,sigma = sigma_est, rescale_sigma=True)
+#     sigma_est = estimate_sigma(GR) 
+#     https://scikit-image.org/docs/dev/api/skimage.restoration.html#r3b8ec6d23a4e-2
+#     BayesShrink: I think it's similar to level dependent threshold
+    im_visushrink = denoise_wavelet(GR, method = 'BayesShrink',mode = 'soft', wavelet = 'bior3.5',
+                                    wavelet_levels = 4, rescale_sigma=True)
     H = np.exp(im_visushrink)
-    psf = otf2psf(H, psf_size)
+    psf = abs(otf2psf(H, psf_size))
     return H,psf
     
 #xudong ma 19/05/2021
