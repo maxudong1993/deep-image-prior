@@ -74,7 +74,7 @@ def estimatePSF(img, psf_size = [5,5]):
 #     sigma_est = estimate_sigma(GR) 
 #     https://scikit-image.org/docs/dev/api/skimage.restoration.html#r3b8ec6d23a4e-2
 #     BayesShrink: I think it's similar to level dependent threshold
-    im_visushrink = denoise_wavelet(GR, method = 'BayesShrink',mode = 'soft', wavelet = 'db1',
+    im_visushrink = denoise_wavelet(GR, method = 'BayesShrink',mode = 'soft', wavelet = 'db2',
                                     wavelet_levels = 4, rescale_sigma=True)
     H = np.exp(im_visushrink)
     psf = abs(otf2psf(H, psf_size))
