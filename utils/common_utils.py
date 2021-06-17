@@ -191,8 +191,8 @@ def plot_image_grid(images_np, nrow =8, factor=1, interpolation='lanczos'):
 
 def load(path):
     """Load PIL image."""
-#     img = Image.open(path)
-    img = Image.open(path).convert('RGB') #Xudong adding
+    img = Image.open(path)
+#     img = Image.open(path).convert('RGB') #Xudong adding
     return img
 
 def samesize_images(us_path, mr_path):
